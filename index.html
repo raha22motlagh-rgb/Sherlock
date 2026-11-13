@@ -1,0 +1,541 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <script>
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js");
+}
+  </script>
+<head><link rel="manifest" href="./manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHERLOCK - The Last Clue</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #10131d;
+    color: #f5f1e8;
+    font-family: Georgia, serif;
+    min-height: 100vh;
+}
+
+header {
+    padding: 22px;
+    text-align: center;
+    background: #191e2c;
+    border-bottom: 1px solid #bd9454;
+}
+
+header h1 {
+    color: #d7ad68;
+    letter-spacing: 5px;
+    font-size: 28px;
+}
+
+header p {
+    color: #aaa;
+    margin-top: 7px;
+    font-size: 11px;
+    letter-spacing: 3px;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 22px;
+}
+
+.screen {
+    display: none;
+    animation: fade .4s ease;
+}
+
+.screen.active {
+    display: block;
+}
+
+@keyframes fade {
+    from {opacity:0; transform:translateY(10px);}
+    to {opacity:1; transform:translateY(0);}
+}
+
+.hero {
+    text-align: center;
+    padding: 55px 10px;
+}
+
+.hero .symbol {
+    font-size: 75px;
+    margin-bottom: 20px;
+}
+
+.hero h2 {
+    color: #d7ad68;
+    font-size: 29px;
+    margin-bottom: 12px;
+}
+
+.hero p {
+    color: #aaa;
+    line-height: 1.8;
+}
+
+button {
+    width: 100%;
+    padding: 16px;
+    margin-top: 14px;
+    border: 1px solid #bd9454;
+    background: #252b3a;
+    color: #f5f1e8;
+    font-size: 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: .2s;
+}
+
+button:active {
+    background: #bd9454;
+    color: #10131d;
+}
+
+.primary {
+    background: #bd9454;
+    color: #10131d;
+    font-weight: bold;
+}
+
+h2 {
+    color: #d7ad68;
+    margin: 25px 0 15px;
+}
+
+.description {
+    line-height: 1.9;
+    color: #c4c5ca;
+    margin: 18px 0;
+    font-size: 15px;
+}
+
+.card {
+    background: #1c2230;
+    border: 1px solid #353d4c;
+    padding: 17px;
+    margin: 13px 0;
+    border-radius: 7px;
+}
+
+.card h3 {
+    color: #d7ad68;
+    margin-bottom: 9px;
+}
+
+.card p {
+    color: #b9bbc4;
+    line-height: 1.7;
+    font-size: 14px;
+}
+
+.status {
+    color: #d7ad68;
+    text-align: center;
+    margin: 15px;
+}
+
+.clue {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.clue span {
+    font-size: 27px;
+}
+
+.progress {
+    height: 7px;
+    background: #353b49;
+    border-radius: 10px;
+    margin: 15px 0;
+    overflow: hidden;
+}
+
+.progress div {
+    height: 100%;
+    width: 0%;
+    background: #d7ad68;
+    transition: .3s;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #686e7c;
+    font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>SHERLOCK</h1>
+    <p>THE LAST CLUE</p>
+</header>
+
+<div class="container">
+
+<!-- HOME -->
+<section id="home" class="screen active">
+
+    <div class="hero">
+        <div class="symbol">🔎</div>
+        <h2>THE DETECTIVE</h2>
+        <p>
+            Every mystery has an answer.<br>
+            Every criminal leaves a clue.<br>
+            Can you discover the truth?
+        </p>
+
+        <button class="primary" onclick="startGame()">
+            START INVESTIGATION
+        </button>
+
+        <button onclick="showAbout()">
+            ABOUT THE GAME
+        </button>
+    </div>
+
+</section>
+
+<!-- STORY -->
+<section id="story" class="screen">
+
+    <h2>CASE FILE #001</h2>
+    <div class="card">
+        <h3>THE MISSING NECKLACE</h3>
+        <p>
+            Location: Anderson Mansion<br>
+            Time: 11:45 PM<br>
+            Victim: Mr. Anderson
+        </p>
+    </div>
+
+    <p class="description">
+        Last night, a priceless diamond necklace
+        disappeared from the mansion.
+
+        Three people were inside the house.
+
+        Nobody admits seeing anything.
+
+        You have been hired to investigate
+        this mysterious case.
+
+        Find the evidence. Question the suspects.
+        Discover the truth.
+    </p>
+
+    <button class="primary" onclick="showClues()">
+        ENTER THE CRIME SCENE
+    </button>
+
+</section>
+
+<!-- CLUES -->
+<section id="clues" class="screen">
+
+    <h2>CRIME SCENE</h2>
+    <p class="description">
+        Investigate the mansion and collect evidence.
+    </p>
+
+    <div class="status" id="clueStatus">
+        Evidence collected: 0 / 3
+    </div>
+
+    <div class="progress">
+        <div id="progressBar"></div>
+    </div>
+
+    <div id="clueList">
+
+        <button onclick="collectClue(0)">
+            🔍 Examine the Broken Window
+        </button>
+
+        <button onclick="collectClue(1)">
+            👞 Examine the Muddy Footprint
+        </button>
+
+        <button onclick="collectClue(2)">
+            📜 Read the Torn Note
+        </button>
+
+    </div>
+
+    <div id="nextButton"></div>
+
+</section>
+
+<!-- SUSPECTS -->
+<section id="suspects" class="screen">
+
+    <h2>THE SUSPECTS</h2>
+
+    <p class="description">
+        Three people. One criminal.
+        Choose carefully.
+    </p>
+
+    <div class="card">
+        <h3>JAMES - The Butler</h3>
+        <p>
+            A loyal employee who has worked
+            in the mansion for ten years.
+        </p>
+        <button onclick="interrogate('James')">
+            INTERROGATE JAMES
+        </button>
+    </div>
+
+    <div class="card">
+        <h3>EMILY - The Daughter</h3>
+        <p>
+            She knew exactly where the necklace
+            was hidden.
+        </p>
+        <button onclick="interrogate('Emily')">
+            INTERROGATE EMILY
+        </button>
+    </div>
+
+    <div class="card">
+        <h3>ROBERT - The Gardener</h3>
+        <p>
+            He was working outside the mansion
+            on the night of the robbery.
+        </p>
+        <button onclick="interrogate('Robert')">
+            INTERROGATE ROBERT
+        </button>
+    </div>
+
+</section>
+
+<!-- INTERROGATION -->
+<section id="interrogation" class="screen">
+
+    <h2>INTERROGATION ROOM</h2>
+
+    <div class="card">
+        <h3 id="suspectName"></h3>
+        <p id="suspectText"></p>
+    </div>
+
+    <p class="description">
+        You have collected all the evidence.
+        It is time to make your decision.
+    </p>
+
+    <button class="primary" id="accuseButton">
+        ACCUSE THIS SUSPECT
+    </button>
+
+    <button onclick="showSuspects()">
+        BACK TO SUSPECTS
+    </button>
+
+</section>
+
+<!-- RESULT -->
+<section id="result" class="screen">
+
+    <div class="hero">
+        <div class="symbol" id="resultIcon">🏆</div>
+        <h2 id="resultTitle">CASE SOLVED</h2>
+        <p id="resultText"></p>
+
+        <div class="card">
+            <h3>INVESTIGATION SCORE</h3>
+            <p id="score"></p>
+        </div>
+
+        <button class="primary" onclick="startGame()">
+            PLAY AGAIN
+        </button>
+
+        <button onclick="goHome()">
+            MAIN MENU
+        </button>
+    </div>
+
+</section>
+
+<!-- ABOUT -->
+<section id="about" class="screen">
+    <h2>ABOUT SHERLOCK</h2>
+    <p class="description">
+        Sherlock: The Last Clue is a mystery
+        investigation game.
+
+        Your job is to investigate mysterious
+        cases, discover hidden evidence,
+        interrogate suspects and solve crimes.
+    </p>
+    <button onclick="goHome()">BACK TO MENU</button>
+</section>
+
+</div>
+
+<footer>
+    SHERLOCK: THE LAST CLUE © 2026
+</footer>
+
+<script>
+
+let collected = [];
+let selectedSuspect = "";
+
+const clues = [
+    {
+        title: "Broken Window",
+        text: "The glass pieces are inside the room. Someone broke the window from outside."
+    },
+    {
+        title: "Muddy Footprint",
+        text: "A large muddy footprint was found near the library. It matches Robert's gardening boots."
+    },
+    {
+        title: "Torn Note",
+        text: "The note reads: I will take the necklace tonight. It is signed with the letter R."
+    }
+];
+
+const suspects = {
+    James: "I was preparing dinner. I never entered the library that night.",
+    Emily: "I was upstairs in my bedroom. I heard something break, but I saw nobody.",
+    Robert: "I was in the garden all evening. I know nothing about the necklace."
+};
+
+function showScreen(id) {
+    document.querySelectorAll(".screen").forEach(s => {
+        s.classList.remove("active");
+    });
+
+    document.getElementById(id).classList.add("active");
+    window.scrollTo(0,0);
+}
+
+function goHome() {
+    showScreen("home");
+}
+
+function startGame() {
+    collected = [];
+    selectedSuspect = "";
+    showScreen("story");
+}
+
+function showAbout() {
+    showScreen("about");
+}
+
+function showClues() {
+    updateClues();
+    showScreen("clues");
+}
+
+function collectClue(index) {
+
+    if (collected.includes(index)) return;
+
+    collected.push(index);
+
+    alert(
+        "EVIDENCE FOUND!\n\n" +
+        clues[index].title + "\n\n" +
+        clues[index].text
+    );
+
+    updateClues();
+}
+
+function updateClues() {
+
+    document.getElementById("clueStatus").textContent =
+        "Evidence collected: " + collected.length + " / 3";
+
+    document.getElementById("progressBar").style.width =
+        (collected.length / 3 * 100) + "%";
+
+    const buttons = document.querySelectorAll("#clueList button");
+
+    buttons.forEach((button, index) => {
+        if (collected.includes(index)) {
+            button.textContent = "✓ " + clues[index].title + " - FOUND";
+            button.style.opacity = "0.5";
+            button.disabled = true;
+        }
+    });
+
+    if (collected.length === 3) {
+        document.getElementById("nextButton").innerHTML =
+            '<button class="primary" onclick="showSuspects()">INTERROGATE SUSPECTS</button>';
+    }
+}
+
+function showSuspects() {
+    if (collected.length !== 3) return;
+    showScreen("suspects");
+}
+
+function interrogate(name) {
+
+    selectedSuspect = name;
+
+    document.getElementById("suspectName").textContent = name;
+
+    document.getElementById("suspectText").textContent =
+        suspects[name];
+
+    document.getElementById("accuseButton").onclick = function() {
+        solveCase(name);
+    };
+
+    showScreen("interrogation");
+}
+
+function solveCase(name) {
+
+    showScreen("result");
+
+    if (name === "Robert") {
+
+        document.getElementById("resultIcon").textContent = "🏆";
+        document.getElementById("resultTitle").textContent = "CASE SOLVED!";
+        document.getElementById("resultText").textContent =
+            "Excellent detective work! Robert was the thief. The evidence exposed his lies.";
+
+        document.getElementById("score").textContent = "100 / 100";
+
+    } else {
+
+        document.getElementById("resultIcon").textContent = "❌";
+        document.getElementById("resultTitle").textContent = "WRONG SUSPECT!";
+        document.getElementById("resultText").textContent =
+            "You accused the wrong person. Robert was the real thief. Study the evidence again.";
+
+        document.getElementById("score").textContent = "0 / 100";
+    }
+}
+
+</script>
+
+</body>
+</html>
